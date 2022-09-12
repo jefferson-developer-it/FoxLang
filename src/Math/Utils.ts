@@ -17,3 +17,7 @@ export function Random(args: string, line: number) {
 // export function Round(num: number): number{
 //     return Math.round(num)
 // }
+
+export function ExecMath(strExec: string){
+    return eval(strExec)
+}

@@ -1,13 +1,14 @@
-import { Const, TypeOf, Write } from "./commands.ts"
+import { Clear, Const, TypeOf, Write } from "./commands.ts"
 import { Random } from "./Math/Utils.ts"
-import { ExecIf, regIf } from "./utils/func/if.ts";
-import { regConst, regRandom, regTypeOf, regWrite } from "./utils/func/task.ts";
+import { Debug } from "./run.ts";
+import { ConvFoxExpToJS, ExecIf, regIf } from "./utils/func/if.ts";
+import { regClear, regConst, regRandom, regTypeOf, regWrite } from "./utils/func/task.ts";
 import { regStr } from "./utils/str.ts";
 import { ManageString } from "./utils/str/main.ts";
 
 export const TypeExp = {
     str: /'(.*?)'/,
-    num: /[0-9]/,
+    num: /(.*[0-9])/,
     bool: /[T|F]/,
     func: /([a-z|A-Z].*[a-z|A-Z])\((.*?)\)/,
     arr: /\[(.*?)\]/
@@ -62,7 +63,7 @@ export function ExtractIndex(args: string){
 
 export function ValidatorType(value: string, expect: string) {
     value = value.trim()
-    
+
     switch (expect) {
         case "any":
             return true
@@ -77,13 +78,27 @@ export function ValidatorType(value: string, expect: string) {
             else return false
         case "num":
             if(TypeExp.str.test(value)) return false
-            else if(TypeExp.num.test(value)) return true
-            else return false
+            else if(TypeExp.num.test(value)){
+                return true
+            }
+            else{
+                return false
+            }
         case "bool":
             if(TypeExp.bool.test(value)) return true
-            else return false
+            else {
+                const js_expression = ConvFoxExpToJS(value.split(" "), 0).join(" ")
+                let foxBool = false;
+                try {
+                    const boolean = eval(js_expression)                     
+                    foxBool = boolean == true || boolean == false
+                // deno-lint-ignore no-empty
+                }catch(_){}
+                
+                return foxBool
+            }
         default:
-            break;
+            return false
     }
 }
 
@@ -93,9 +108,10 @@ export function RemoveTraces(x: string): string{
 
 // deno-lint-ignore no-explicit-any
 export function VerifyValue(value: string, line: number, codeArr?: string[], callback?: ()=>void): any {
-
     if(regWrite.test(value)){
         return Write(value, line)
+    }else if(regClear.test(value)){
+        return Clear() 
     }else if(regRandom.test(value)){
         return Random(value, line) 
     }else if(regTypeOf.test(value)){

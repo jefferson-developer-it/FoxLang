@@ -1,20 +1,27 @@
+import { ExecMath } from "./Math/Utils.ts";
+import { Debug, ExecBool } from "./run.ts";
 import { ExtractArgs, RemoveTraces, TypeExp, ValidatorType, VerifyValue } from "./validator.ts"
 import { VariablesGlobal } from "./variables.ts"
 
 export function Write(args: string, line: number){
     const argc = ExtractArgs(args);
     
-    let msg_write = ""    
-
+    let msg_write = ""
+    
     for(const msg of argc){
         const key: string = msg.trim()
-        
-        if(ValidatorType(key, "func")){
+        Debug(key)
+
+        if(VariablesGlobal[key]){
+            msg_write += RemoveTraces(VariablesGlobal[key].Value)
+        }else if(ValidatorType(key, "func")){
             msg_write += RemoveTraces(VerifyValue(key, line))
         }else if(ValidatorType(key, "str")){
             msg_write += RemoveTraces(key)
-        }else if(VariablesGlobal[key]){
-            msg_write += RemoveTraces(VariablesGlobal[key].Value)
+        }else if(ValidatorType(key, "bool")){
+            msg_write += ExecBool(key)
+        }else if(ValidatorType(key, "num")){
+            msg_write += ExecMath(key)
         }else{            
             const value = VerifyValue(key, line, [], ()=>{
                 throw new Error(`The variable/constant ${key} is not declared.\n Error at line ${line}`);
@@ -56,4 +63,8 @@ export function Const(args: string, line: number){
     VariablesGlobal[nameVar].Mutable = false;
 
     return `The ${nameVar} now is a const. Can't do change your value.`
+}
+
+export function Clear(){
+    console.clear()
 }

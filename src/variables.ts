@@ -1,7 +1,13 @@
 import { Variables } from "../interfaces.ts";
+import { Debug, ExecBool } from "./run.ts";
 import { TypeExp, ValidatorType, VerifyValue } from "./validator.ts";
 
 export const VariablesGlobal: {[x: string]: Variables} = {}
+export let NextLine = 0;
+
+export function ChangeNextLine(n: number){
+    NextLine = n;
+}
 
 export function AddVar(codeLine: string, line: number){
     codeLine = codeLine.replace("var", "").trim()
@@ -17,15 +23,19 @@ export function AddVar(codeLine: string, line: number){
     const correctType = ValidatorType(value, type);
 
     if(!correctType) throw new Error(`Error at line ${line};\nExpect type ${type}, but the value ${value} not is this type.`);
-       
-
+    
     const variable:Variables = {
         Value: value,
         Name: name,
         Type: type,
         Address: Math.random().toString(16),
         Mutable: true
-    } 
+    }
+
+
+    if(type == "bool"){
+        variable.Value = ExecBool(value);        
+    }
 
     VariablesGlobal[name] = variable
 }
